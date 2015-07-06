@@ -24,6 +24,7 @@
 
 import logging
 import simplejson
+import openerp
 
 from openerp import models, fields, api
 
@@ -56,16 +57,16 @@ class CenitFlow (models.Model):
         
     @api.one
     def local_post(self, data):
-        db = context.get('partner_db')
+        db = self.env.context.get('partner_db')
         if db:
             registry = openerp.modules.registry.RegistryManager.get(db)
             with registry.cursor() as cr:
-                ruid = context.get('user', False)
+                ruid = self.env.context.get('user', False)
                 if not ruid:
                     domain = [('oauth_uid', '!=', False)]
                     uids = registry['res.users'].search(cr, SI, domain)
                     ruid = uids and uids[0] or SI
-                model = obj.root.lower()
+                model = self.data_type.cenit_root
                 return registry['cenit.flow'].receive(cr, ruid, model, data)
 
     '''

@@ -41,13 +41,14 @@ class CenitSerializer(models.TransientModel):
         wdt = self.env['cenit.data_type']
         match = data_type.model.model == obj._name
         if match:
-            schema = simplejson.loads (data_type.schema.schema) ['properties']
+            #schema = simplejson.loads (data_type.schema.schema) ['properties']
             _reset = []
             columns = self.env[obj._name]._columns
             for field in data_type.lines:
                 if field.line_type == 'field' and getattr(obj, field.name):
-                    checker = self._get_checker (schema.get (field.value))
-                    vals[field.value] = checker (getattr(obj, field.name))
+                    #checker = self._get_checker (schema.get (field.value))
+                    #vals[field.value] = checker (getattr(obj, field.name))
+                    vals[field.value] = getattr(obj, field.name)
                 elif field.line_type == 'model':
                     _reset.append(field.value)
                     relation = getattr(obj, field.name)

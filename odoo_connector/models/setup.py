@@ -315,7 +315,6 @@ class CenitFlow (models.Model):
         pass
 
     @api.model
-    @api.cr_uid
     def receive(self, model, data):
         res = False
         context = self.env.context.copy() or {}
@@ -456,7 +455,7 @@ class CenitFlow (models.Model):
     def send_all(self, id_):
         flow = self.browse(id_)
         mo = self.env[flow.data_type.model.model]
-        if mo:
+        if mo is not None:
             data = []
             objs = mo.search([])
             if flow.format_ == 'application/json':
@@ -467,7 +466,7 @@ class CenitFlow (models.Model):
                  hasattr(mo, 'edi_export'):
                 data = mo.edi_export(objs)
             if data:
-                return flow._send(data)
+			    return flow._send(data)
         return False
 
     @api.one
