@@ -56,14 +56,17 @@ class CenitFlow (models.Model):
 
     @api.one
     def local_post(self, data):
+        rc = False
+
         # TODO: get partner_data from partner
         partner_data = context.get('partner_data')
+        if not partner_data:
+            return rc
         
         root = self.schema.cenit_root()
         if isinstance(root, list):
             root = root[0]
 
-        rc = False
         try:
             url = '%s/push' % partner_data['host']
             values = {root: data}
