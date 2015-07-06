@@ -53,7 +53,22 @@ class CenitFlow (models.Model):
         if self.env.context.get('send_method'):
             method = self.env.context['send_method']
         return getattr(self, method)(data)
+        
+    @api.one
+    def local_post(self, data):
+        db = context.get('partner_db')
+        if db:
+            registry = openerp.modules.registry.RegistryManager.get(db)
+            with registry.cursor() as cr:
+                ruid = context.get('user', False)
+                if not ruid:
+                    domain = [('oauth_uid', '!=', False)]
+                    uids = registry['res.users'].search(cr, SI, domain)
+                    ruid = uids and uids[0] or SI
+                model = obj.root.lower()
+                return registry['cenit.flow'].receive(cr, ruid, model, data)
 
+    '''
     @api.one
     def local_post(self, data):
         rc = False
@@ -80,3 +95,4 @@ class CenitFlow (models.Model):
             _logger.exception(e)
 
         return rc
+    '''
