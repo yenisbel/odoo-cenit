@@ -248,7 +248,7 @@ class CenitFlow (models.Model):
                     ('schema', '=', self.schema.id)
                 ],
                 'event': [
-                    ('schema', '=', self.schema.id)
+                    ('schema', 'in', [self.schema.id, False])
                 ],
             }
         }
