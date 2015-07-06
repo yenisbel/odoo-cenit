@@ -315,6 +315,7 @@ class CenitFlow (models.Model):
         pass
 
     @api.model
+    @api.cr_uid
     def receive(self, model, data):
         res = False
         context = self.env.context.copy() or {}
