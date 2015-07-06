@@ -184,18 +184,6 @@ class CenitEvent (models.Model):
     )
 
 
-class CenitTranslator (models.Model):
-    _name = "cenit.translator"
-
-    name = fields.Char('Name', required=True, unique=True)
-    type_ = fields.Char("Type")
-    mime_type = fields.Char('MIME Type')
-    schema = fields.Many2one(
-        'cenit.schema',
-        string = 'Schema'
-    )
-
-
 class CenitFlow (models.Model):
     _name = "cenit.flow"
 
@@ -214,8 +202,6 @@ class CenitFlow (models.Model):
         ],
         'Format', default='application/json', required=True
     )
-    local = fields.Boolean('Bypass Cenit', default=False)
-    cenit_translator = fields.Many2one('cenit.translator', "Translator")
 
     schema = fields.Many2one(
         'cenit.schema', 'Schema', required=True
@@ -225,20 +211,13 @@ class CenitFlow (models.Model):
     )
 
     webhook = fields.Many2one(
-        'cenit.webhook', string='Webhook', required=True
+        'cenit.webhook', string='Webhook'
     )
     connection_role = fields.Many2one(
         'cenit.connection.role', string='Connection role'
     )
 
     method = fields.Selection(related="webhook.method")
-
-    cenit_response_translator = fields.Selection(
-        [], string="Response translator"
-    )
-    response_data_type = fields.Many2one(
-        'cenit.data_type', string='Response data type'
-    )
 
     _sql_constraints = [
         ('name_uniq', 'UNIQUE(name)', 'The name must be unique!'),
@@ -271,23 +250,6 @@ class CenitFlow (models.Model):
                 'event': [
                     ('schema', '=', self.schema.id)
                 ],
-            }
-        }
-
-    @api.onchange('schema', 'webhook')
-    def _on_schema_or_hook_changed(self):
-        return {
-            'value': {
-                'cenit_translator': "",
-            },
-            'domain': {
-                'cenit_translator': [
-                    ('schema', 'in', (self.schema.id, False)),
-                    ('type_', '=', {
-                            'get': 'Import',
-                        }.get(self.webhook.method, 'Export')
-                    )
-                ]
             }
         }
 

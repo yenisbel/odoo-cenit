@@ -32,6 +32,7 @@
     """,
     'depends': ['base', 'base_action_rule'],
     'data': [
+        'data/data.xml',
         'security/ir.model.access.csv',
         'view/data_definitions.xml',
         'view/setup.xml',

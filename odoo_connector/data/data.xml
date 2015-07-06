@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+
+        <record id="event_on_create" model="cenit.event">
+            <field name="name">On Create</field>
+            <field name="type">on_create</field>
+        </record>
+        
+        <record id="event_on_write" model="cenit.event">
+            <field name="name">On Write</field>
+            <field name="type">on_write</field>
+        </record>
+        
+        <record id="event_on_create_or_update" model="cenit.event">
+            <field name="name">On Create or Update</field>
+            <field name="type">on_create_or_update</field>
+        </record>
+        
+        <record id="event_interval" model="cenit.event">
+            <field name="name">Interval</field>
+            <field name="type">interval</field>
+        </record>
+        
+        <record id="event_only_manual" model="cenit.event">
+            <field name="name">Only Manual</field>
+            <field name="type">only_manual</field>
+        </record>
+
+    </data>
+</openerp>
