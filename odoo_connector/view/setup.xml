@@ -279,7 +279,7 @@
                             <field name="cron"
                                    attrs="{'required':[('event','=','interval')],'invisible':[('event','!=','interval')]}" />
                             <field name="format_"
-                                   attrs="{'required':[('local','=','True')],'invisible':[('local','!=','True')]}"/>
+                                   />
                         </group>
                     </group>
                 </form>

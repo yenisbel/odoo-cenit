@@ -4,27 +4,27 @@
 
         <record id="event_on_create" model="cenit.event">
             <field name="name">On Create</field>
-            <field name="type">on_create</field>
+            <field name="type_">on_create</field>
         </record>
         
         <record id="event_on_write" model="cenit.event">
             <field name="name">On Write</field>
-            <field name="type">on_write</field>
+            <field name="type_">on_write</field>
         </record>
         
         <record id="event_on_create_or_update" model="cenit.event">
             <field name="name">On Create or Update</field>
-            <field name="type">on_create_or_update</field>
+            <field name="type_">on_create_or_update</field>
         </record>
         
         <record id="event_interval" model="cenit.event">
             <field name="name">Interval</field>
-            <field name="type">interval</field>
+            <field name="type_">interval</field>
         </record>
         
         <record id="event_only_manual" model="cenit.event">
             <field name="name">Only Manual</field>
-            <field name="type">only_manual</field>
+            <field name="type_">only_manual</field>
         </record>
 
     </data>
