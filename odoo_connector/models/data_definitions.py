@@ -41,7 +41,8 @@ class CenitSchema(models.Model):
         if not root:
             root = schema.get('name', False)
         if not root:
-            root = ".".join(self.uri.split(".")[:-1])
+            root = self.uri
+        print root
         return "_".join(root.lower().split())
 
     library = fields.Many2one(

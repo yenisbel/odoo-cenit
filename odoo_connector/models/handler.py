@@ -46,6 +46,7 @@ class CenitHandler(models.TransientModel):
 
     @api.model
     def process(self, match, params):
+        print match
         vals = {}
         for field in match.lines:
             if field.name == "id":
@@ -65,7 +66,7 @@ class CenitHandler(models.TransientModel):
                         vals[field.name].append(tup)
                 elif field.line_cardinality == '2one':
                     x = params.get(field.value, {})
-                    rel_ids = self.push(x, field.reference.name)
+                    rel_ids = self.push(x, field.reference.cenit_root)
                     vals[field.name] = rel_ids and rel_ids[0] or False
             elif field.line_type == 'reference':
                 vals[field.name] = self.find_reference(match, field, params)

@@ -57,7 +57,7 @@ class CenitSerializer(models.TransientModel):
                             self.serialize(x) for x in relation
                         ]
                     else:
-                        vals[field.value] = self.serialize(relation)
+                        vals[field.value] = self.serialize(relation, field.reference)
                 elif field.line_type == 'reference':
                     _reset.append(field.value)
                     vals[field.value] = self.find_reference(field, obj)
