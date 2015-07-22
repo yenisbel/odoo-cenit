@@ -68,3 +68,10 @@ class CenitSerializer(models.TransientModel):
                 "_reset": _reset
             })
         return vals
+    
+    def serialize_model_id(self, cr, uid, model, oid, context=None):
+        obj = self.pool.get(model).browse(cr, uid, oid)
+        model_id = self.pool.get('ir.model').search(cr, uid, [('model', '=', model)], context=context)[0]
+        data_type_id = self.pool.get('cenit.data_type').search(cr, uid, [('model', '=', model_id)], context=context)
+        data_type = self.pool.get('cenit.data_type').browse(cr, uid, data_type_id, context=context)
+        return self.serialize(cr, uid, obj, data_type, context)

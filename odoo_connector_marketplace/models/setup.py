@@ -24,9 +24,10 @@
 
 import logging
 import simplejson
+import requests
 import openerp
 
-from openerp import models, fields, api
+from openerp import models, fields, api, SUPERUSER_ID as SI
 
 from datetime import datetime
 

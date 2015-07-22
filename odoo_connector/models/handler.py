@@ -27,6 +27,7 @@ class CenitHandler(models.TransientModel):
                 return objs[0]
         return False
 
+    # TODO: what if the model does not have field name?
     @api.model
     def find_reference(self, match, field, params):
         f = [x for x in match.model.field_id if x.name == field.name][0]
@@ -37,9 +38,11 @@ class CenitHandler(models.TransientModel):
         value = params.get(field.value, False)
         if (field.line_cardinality == "2many") and value:
             op = "in"
-        to_search = [('name', op, value)]
-        objs = model_obj.search(to_search)
-        rc = objs or False
+        try:
+            objs = model_obj.search([('name', op, value)])
+            rc = objs or False
+        except:
+            rc = False
         if rc and (field.line_cardinality == "2one"):
             rc = rc[0].id
         return rc
