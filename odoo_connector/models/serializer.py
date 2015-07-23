@@ -54,7 +54,7 @@ class CenitSerializer(models.TransientModel):
                     relation = getattr(obj, field.name)
                     if field.line_cardinality == '2many':
                         vals[field.value] = [
-                            self.serialize(x) for x in relation
+                            self.serialize(x, field.reference) for x in relation
                         ]
                     else:
                         vals[field.value] = self.serialize(relation, field.reference)
