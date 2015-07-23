@@ -305,8 +305,14 @@ class CenitFlow (models.Model):
         return super(CenitFlow, self).unlink()
 
     @api.model
-    def find(self, model, purpose):
+    def find(self, model, purpose=None):
         domain = [('data_type.cenit_root', '=', model)]
+        objs = self.search(domain)
+        return objs and objs[0] or False
+    
+    @api.model
+    def find_by_object(self, model):
+        domain = [('data_type.model.model', '=', model)]
         objs = self.search(domain)
         return objs and objs[0] or False
 
@@ -424,11 +430,14 @@ class CenitFlow (models.Model):
         return True
 
     @api.model
-    def send(self, obj, flow_id):
+    def send(self, obj, flow_id=None):
         dt_pool = self.env['cenit.data_type']
         ws = self.env['cenit.serializer']
-
-        flow = self.browse(flow_id)
+        
+        if flow_id:
+            flow = self.browse(flow_id)
+        else:
+            flow = self.find_by_object(obj._name)
 
         if flow:
             data = None
