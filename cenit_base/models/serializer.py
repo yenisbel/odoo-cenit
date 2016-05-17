@@ -14,12 +14,31 @@ class CenitSerializer(models.TransientModel):
     _name = 'cenit.serializer'
 
     @api.model
-    def _get_checker (self, schema_type):
-        return {
+    def _get_checker(self, schema_type, inlined=False):
+        def get_checker(checker):
+            def _do_check(obj):
+                if not obj:
+                    return None
+                return checker(obj)
+            return _do_check
+
+        def _dummy(obj):
+            return obj
+
+        _checkers = {
             'integer': int,
             'number': float,
             'boolean': bool,
-        }.get (schema_type['type'], str)
+            'array': list,
+            'string': str,
+            'object': dict,
+        }
+        type_ = schema_type.get('type', 'other')
+        if type_ == 'object' and inlined:
+            type_ = schema_type.get('properties', {'type': 'other'}).values()[
+                0].get('type', 'other')
+
+        return get_checker(_checkers.get(type_, _dummy))
 
     @api.model
     def find_reference(self, field, obj):
@@ -29,7 +48,7 @@ class CenitSerializer(models.TransientModel):
             name = getattr(record, 'name', False)
             if not name:
                 name = False
-            names.append (name)
+            names.append(name)
 
         if field.line_cardinality == "2many":
             return names
@@ -50,42 +69,60 @@ class CenitSerializer(models.TransientModel):
         return key, rc
 
     @api.model
+    def _match(self, obj, data_type):
+        pass
+
+    @api.model
     def serialize(self, obj, data_type):
         vals = {}
-        wdt = self.env['cenit.data_type']
-        match = data_type.model.model == obj._name
+        match = data_type.ensure_object(obj)
 
         if match:
-            schema = simplejson.loads (data_type.schema.schema) ['properties']
+            schema = simplejson.loads(data_type.schema.schema)['properties']
             _reset = []
+            _primary = []
 
-            columns = self.env[obj._name]._columns
             for field in data_type.lines:
+                schema_data = schema.get(field.value, {"type": "string"})
+                checker = self._get_checker(schema_data, field.inlined)
+
+                if field.primary:
+                    _primary.append(field.value)
+
                 if field.line_type == 'field':
-                    checker = self._get_checker (schema.get (field.value))
-                    vals[field.value] = checker (getattr(obj, field.name))
+                    vals[field.value] = checker(getattr(obj, field.name))
                 elif field.line_type == 'model':
                     _reset.append(field.value)
                     relation = getattr(obj, field.name)
                     if field.line_cardinality == '2many':
-                        vals[field.value] = [
-                            self.serialize(x) for x in relation
+                        value = [
+                            self.serialize(x, field.reference) for x in relation
                         ]
                     else:
-                        vals[field.value] = self.serialize(relation)
+                        value = self.serialize(relation, field.reference)
+                    vals[field.value] = checker(value)
                 elif field.line_type == 'reference':
                     _reset.append(field.value)
-                    vals[field.value] = self.find_reference(field, obj)
+                    vals[field.value] = checker(self.find_reference(field, obj))
                 elif field.line_type == 'default':
                     kwargs = dict([
                         (self._eval(obj, key)) for key in re_key.findall(
                             field.name
                         )
                     ])
-                    _logger.info("\n\nKwArgs for %s: %s\n", field.value, kwargs)
-                    vals[field.value] = field.name.format(**kwargs)
+                    final = field.name.format(**kwargs)
+                    try:
+                        value = simplejson.loads(final)
+                    except Exception:
+                        value = final
+                    vals[field.value] = checker(value)
+                elif field.line_type == 'code':
+                    vals[field.value] = checker(eval(field.name))
 
-            vals.update ({
+            vals.update({
                 "_reset": _reset
             })
+
+            if _primary:
+                vals.update({"_primary": _primary})
         return vals

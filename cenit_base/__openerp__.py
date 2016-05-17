@@ -20,15 +20,16 @@
 ##############################################################################
 
 {
-    'name': 'Cenit Client',
-    'version': '0.2',
+    'name': 'Cenit Integrations Client',
+    'version': '0.10.0',
     'application': True,
-    'author': 'OpenJAF',
-    'website': 'http://www.openjaf.com',
+    'author': 'Cenit, OpenJAF',
+    'website': 'https://www.cenitsaas.com',
     #~ 'license': 'LGPL-3',
-    'category': 'Integration',
+    'category': 'Extra Tools',
+    'summary': 'Odoo, Cenit, Integration, Connector',
     'description': """
-        Cenit Client for Odoo
+        Integrate with third party systems through the Cenit platform
     """,
     'depends': ['base', 'base_action_rule'],
     'data': [
@@ -36,6 +37,9 @@
         'view/config.xml',
         'view/data_definitions.xml',
         'view/setup.xml',
+    ],
+    'images': [
+        'static/screenshots/main.png'
     ],
     'installable': True
 }

@@ -83,6 +83,14 @@ class CenitSettings (models.TransientModel):
         help=""
     )
 
+    module_cenit_asana = fields.Boolean('Asana API',
+        help=""
+    )
+
+    module_cenit_messagebird = fields.Boolean('MessageBird API',
+        help=""
+    )
+
     ############################################################################
     # Default values getters
     ############################################################################
@@ -92,7 +100,7 @@ class CenitSettings (models.TransientModel):
             cr, uid, "odoo_cenit.cenit_url", default=None, context=context
         )
 
-        return {'cenit_url': cenit_url or 'https://www.cenithub.com'}
+        return {'cenit_url': cenit_url or 'https://cenit.io'}
 
     def get_default_cenit_user_key (self, cr, uid, ids, context=None):
         cenit_user_key = self.pool.get ("ir.config_parameter").get_param (
@@ -189,9 +197,48 @@ class CenitSettings (models.TransientModel):
             context=context
         )
 
-        installer.install_collection(cr, uid, data.get('id'), context=context)
+        ctx = context.copy()
+        ctx.update({
+            "coll_name": COLLECTION_NAME,
+            "coll_ver": COLLECTION_VERSION,
+        })
 
+        installer.install_collection(cr, uid, data.get('id'), context=ctx)
+
+        self.post_install(cr, uid, ids, context=None)
         return rc
+
+    def post_install(self, cr, uid, ids, context=None):
+        icp = self.pool.get("ir.config_parameter")
+        conn_pool = self.pool.get("cenit.connection")
+        hook_pool = self.pool.get("cenit.webhook")
+        role_pool = self.pool.get("cenit.connection.role")
+
+        conn_data = {
+            "name": "My Odoo host",
+            "url": icp.get_param(cr, uid, 'web.base.url', default=None)
+        }
+        conn = conn_pool.create(cr, uid, conn_data, context=context)
+
+        hook_data = {
+            "name": "Cenit webhook",
+            "path": "cenit/push",
+            "method": "post",
+        }
+        hook = hook_pool.create(cr, uid, hook_data, context=context)
+
+        role_data = {
+            "name": "My Odoo role",
+            "connections": [(6, False, [conn])],
+            "webhooks": [(6, False, [hook])],
+        }
+        role = role_pool.create(cr, uid, role_data, context=context)
+
+        icp.set_param(cr, uid, 'cenit.odoo_feedback.hook', hook)
+        icp.set_param(cr, uid, 'cenit.odoo_feedback.conn', conn)
+        icp.set_param(cr, uid, 'cenit.odoo_feedback.role', role)
+
+        return True
 
 
 class CenitAccountSettings(models.TransientModel):
@@ -214,11 +261,8 @@ class CenitAccountSettings(models.TransientModel):
     # Actions
     ############################################################################
 
-    def fields_view_get(self,
-        cr, uid,
-        view_id=None, view_type='tree',
-        context=None, toolbar=False, submenu=False
-    ):
+    def fields_view_get(self, cr, uid, view_id=None, view_type='tree',
+                        context=None, toolbar=False, submenu=False):
 
         rc = super(CenitAccountSettings, self).fields_view_get(
             cr, uid, view_id=view_id, view_type=view_type, context=context,
@@ -229,9 +273,18 @@ class CenitAccountSettings(models.TransientModel):
         if not arch.startswith('<form string="Cenit Hub account settings">'):
             return rc
 
+        icp = self.pool.get("ir.config_parameter")
+        hub_host = icp.get_param(cr, uid, "odoo_cenit.cenit_url",
+                                 default='https://cenit.io')
+        if hub_host.endswith("/"):
+            hub_host = hub_host[:-1]
+        hub_hook = "captcha"
+        hub_url = "{}/{}".format(hub_host, hub_hook)
+
         try:
-            r = requests.get('https://www.cenithub.com/captcha')
-        except:
+            r = requests.get(hub_url)
+        except Exception as e:
+            _logger.error("\n\Error: %s\n", e)
             raise exceptions.AccessError("Error trying to connect to Cenit.")
 
         captcha_data = simplejson.loads(r.content)
@@ -239,11 +292,10 @@ class CenitAccountSettings(models.TransientModel):
         if not token:
             raise exceptions.AccessError("Error trying to connect to Cenit.")
 
-        icp = self.pool.get("ir.config_parameter")
         icp.set_param(cr, uid, 'cenit.captcha.token', token, context=context)
 
         arch = arch.replace(
-            'img_data_here', 'https://www.cenithub.com/captcha/{}'.format(token)
+            'img_data_here', '{}/{}'.format(hub_url, token)
         )
 
         rc['arch'] = arch
